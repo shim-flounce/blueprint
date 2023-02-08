@@ -55,7 +55,7 @@ export interface ResizeSensor2Props {
      * If you attach a `ref` to the child yourself when rendering it, you must pass the
      * same value here (otherwise, ResizeSensor won't be able to attach its own).
      */
-    targetRef?: React.Ref<any>;
+    targetRef?: React.RefObject<any>;
 }
 
 export class ResizeSensor2 extends AbstractPureComponent2<ResizeSensor2Props> {
@@ -63,7 +63,7 @@ export class ResizeSensor2 extends AbstractPureComponent2<ResizeSensor2Props> {
 
     private targetRef = React.createRef<HTMLElement>();
 
-    private prevElement: HTMLElement | undefined = undefined;
+    private prevElement: Element | undefined = undefined;
 
     private observer = new ResizeObserver(entries => this.props.onResize?.(entries));
 
@@ -96,27 +96,28 @@ export class ResizeSensor2 extends AbstractPureComponent2<ResizeSensor2Props> {
      * re-observe.
      */
     private observeElement(force = false) {
-        if (!(this.targetRef.current instanceof Element)) {
+        const { targetRef = this.targetRef } = this.props;
+        if (!(targetRef.current instanceof Element)) {
             // stop everything if not defined
             this.observer.disconnect();
             return;
         }
 
-        if (this.targetRef.current === this.prevElement && !force) {
+        if (targetRef.current === this.prevElement && !force) {
             // quit if given same element -- nothing to update (unless forced)
             return;
         } else {
             // clear observer list if new element
             this.observer.disconnect();
             // remember element reference for next time
-            this.prevElement = this.targetRef.current;
+            this.prevElement = targetRef.current;
         }
 
         // observer callback is invoked immediately when observing new elements
-        this.observer.observe(this.targetRef.current);
+        this.observer.observe(targetRef.current);
 
         if (this.props.observeParents) {
-            let parent = this.targetRef.current.parentElement;
+            let parent = targetRef.current.parentElement;
             while (parent != null) {
                 this.observer.observe(parent);
                 parent = parent.parentElement;
